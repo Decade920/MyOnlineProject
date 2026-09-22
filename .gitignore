@@ -2,8 +2,12 @@
 terraform.tfvars
 *.tfvars
 
-# terraform 状态文件
+# Terraform 状态文件
 *.tfstate
 *.tfstate.backup
+
+# Terraform 插件目录
 .terraform/
-.terraform.lock.hcl
+
+# 保留 lock 文件（应该提交）
+!.terraform.lock.hcl
