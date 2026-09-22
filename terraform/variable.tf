@@ -1,9 +1,9 @@
 variable "secret_id" {
-  type = string
+  type      = string
   sensitive = true
 }
 
 variable "secret_key" {
-  type = string
+  type      = string
   sensitive = true
 }
