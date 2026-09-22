@@ -41,7 +41,7 @@ resource "tencentcloud_security_group_rule" "web_http" {
   port_range        = "80,443"
   description       = "HTTP/HTTPS"
   policy            = "accept"
-  
+
 }
 
 resource "tencentcloud_security_group_rule" "web_ssh" {
