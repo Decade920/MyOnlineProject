@@ -11,8 +11,8 @@ on:
       - "terraform/**"
 
 concurrency:
-    group: terraform-${{ github.ref }}
-    cancel-in-progress: true
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   plan:
@@ -20,7 +20,7 @@ jobs:
     defaults:
       run:
         working-directory: terraform
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
