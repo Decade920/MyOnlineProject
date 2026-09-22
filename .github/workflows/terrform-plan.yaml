@@ -1,0 +1,51 @@
+name: Terraform Plan
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+
+  concurrency:
+    group: terraform-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    default:
+      run:
+        working-directory: terraform
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.16.2
+
+      - name: Terraform Init
+        run: terraform init
+        env:
+          TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
+          TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
+          TENCENTCLOUD_REGION: ap-guangzhou
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -no-color
+        env:
+          TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
+          TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
+          TENCENTCLOUD_REGION: ap-guangzhou
