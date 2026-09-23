@@ -4,11 +4,13 @@ on:
     branches: [main]
     paths:
       - "terraform/**"
+      - ".github/workflow/**"
 
   pull_request:
     branches: [main]
     paths:
       - "terraform/**"
+      - ".github/workflow/**"
 
 concurrency:
   group: terraform-${{ github.ref }}
