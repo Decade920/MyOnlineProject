@@ -19,10 +19,13 @@ concurrency:
 jobs:
   plan:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, prod]
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/envs/${{ matrix.env }}
 
     steps:
       - name: Checkout code
@@ -36,10 +39,10 @@ jobs:
       - name: Cache Terraform Providers
         uses: actions/cache@v4
         with:
-          path: terraform/.terraform
-          key: terraform-${{ runner.os }}-${{ hashFiles('terraform/.terraform.lock.hcl') }}
+          path: terraform/envs/${{ matrix.env }}/.terraform
+          key: terraform-${{ runner.os }}-${{ matrix.env }}-${{ hashFiles(format('terraform/envs/{0}/.terraform.lock.hcl', matrix.env)) }}
           restore-keys: |
-            terraform-${{ runner.os }}-
+            terraform-${{ runner.os }}-${{ matrix.env }}-
 
       - name: Terraform Init
         run: terraform init

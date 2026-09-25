@@ -1,6 +1,8 @@
 # 敏感文件
-terraform.tfvars
 *.tfvars
+
+!envs/dev/terraform.tfvars
+!envs/prod/terraform.tfvars
 
 # Terraform 状态文件
 *.tfstate
@@ -11,3 +13,6 @@ terraform.tfvars
 
 # 保留 lock 文件（应该提交）
 !.terraform.lock.hcl
+
+# 忽略备份文件
+*.bakup
