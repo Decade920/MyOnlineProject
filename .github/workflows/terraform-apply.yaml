@@ -2,6 +2,14 @@ name: Terraform Apply
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy to"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
 
 concurrency:
   group: terraform-${{ github.ref }}
@@ -10,13 +18,10 @@ concurrency:
 jobs:
   apply:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        env: [dev, prod]
     environment: production
     defaults:
       run:
-        working-directory: terraform/envs/${{ matrix.env }}
+        working-directory: terraform/envs/${{ github.event.inputs.environment }}
 
     steps:
       - name: Checkout code
@@ -27,13 +32,13 @@ jobs:
         with:
           terraform_version: 1.16.3
 
-      - name: Cache Terraform Providers
+      - name: Cache Terraform providers
         uses: actions/cache@v4
         with:
-          path: terraform/envs/${{ matrix.env }}/.terraform
-          key: terraform-${{ runner.os }}-${{ matrix.env }}-${{ hashFiles(format('terraform/envs/{0}/.terraform.lock.hcl', matrix.env)) }}
+          path: terraform/envs/${{ github.event.inputs.environment }}/.terraform
+          key: terraform-${{ runner.os }}-${{ github.event.inputs.environment }}-${{ hashFiles(format('terraform/envs/{0}/.terraform.lock.hcl', github.event.inputs.environment)) }}
           restore-keys: |
-            terraform-${{ runner.os }}-${{ matrix.env }}-
+            terraform-${{ runner.os }}-${{ github.event.inputs.environment }}-
 
       - name: Terraform Init
         run: terraform init
@@ -48,7 +53,7 @@ jobs:
           TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
           TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
           TENCENTCLOUD_REGION: ap-guangzhou
-      
+
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
         env:
