@@ -10,6 +10,9 @@ concurrency:
 jobs:
   destroy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, prod]
     environment: production
     defaults:
       run:

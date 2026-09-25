@@ -19,13 +19,13 @@ variable "ingress_rules" {
       description = "SSH"
     }
     web = {
-      ports       = ["80","443"]
+      ports       = ["80", "443"]
       description = "HTTP/HTTPS"
     }
   }
 }
 
 variable "env_name" {
-  type        = string
+  type    = string
   default = "prod"
 }

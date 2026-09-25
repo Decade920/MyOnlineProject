@@ -26,6 +26,6 @@ variable "ingress_rules" {
 }
 
 variable "env_name" {
-  type        = string
+  type    = string
   default = "dev"
 }
