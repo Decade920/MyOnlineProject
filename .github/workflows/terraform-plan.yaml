@@ -45,7 +45,7 @@ jobs:
             terraform-${{ runner.os }}-${{ matrix.env }}-
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -reconfigure
         env:
           TENCENTCLOUD_SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRET_ID }}
           TENCENTCLOUD_SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRET_KEY }}
