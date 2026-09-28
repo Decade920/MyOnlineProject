@@ -1,0 +1,62 @@
+# yaml-language-server: $schema:none
+{{- if .Values.monitoring.allEnabled }}
+{{- if .Values.monitoring.grafana.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: {{ .Values.monitoring.grafana.replicaCount }}
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: "{{ .Values.monitoring.grafana.image.repository }}:{{ .Values.monitoring.grafana.image.tag }}"
+        imagePullPolicy: "{{ .Values.global.imagePullPolicy}}"
+        ports:
+          - containerPort: {{ .Values.monitoring.grafana.service.port }}
+        volumeMounts:
+          - name: grafana-storage
+            mountPath: /var/lib/grafana
+      volumes:
+        - name: grafana-storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+---
+# yaml-language-server: $schema:none
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  ports:
+  - port: {{ .Values.monitoring.grafana.service.port}}
+    targetPort: {{ .Values.monitoring.grafana.service.port}}
+    nodePort: {{ .Values.monitoring.grafana.service.nodePort}}
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+{{- end }}
+{{- end }}

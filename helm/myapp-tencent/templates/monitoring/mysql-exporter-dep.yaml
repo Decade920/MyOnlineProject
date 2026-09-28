@@ -1,0 +1,66 @@
+{{- if .Values.monitoring.allEnabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "9104"
+  name: mysql-exporter-deployment
+  namespace: monitoring
+  labels:
+    app: mysql-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-exporter
+  template:
+    metadata:
+      labels:
+        app: mysql-exporter
+    spec:
+      containers:
+        - name: mysql-exporter
+          image: prom/mysqld-exporter
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config.my-cnf=/etc/mysql/my.cnf"
+            - "--mysqld.address=mysql-service.default.svc.cluster.local:3306"
+          # command: ["sleep","99999"]
+          ports:
+            - containerPort: 9104
+          volumeMounts:
+          - name: config
+            mountPath: /etc/mysql
+      volumes:
+        - name: config
+          secret:
+            secretName: mysql-exporter-cnf
+---
+# 生成上面deployment的service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-exporter-service
+  namespace: monitoring
+spec:
+  selector:
+    app: mysql-exporter
+  ports:
+    - port: 9104
+      targetPort: 9104
+  type: NodePort
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-exporter-cnf
+  namespace: monitoring
+type: Opaque
+stringData:
+  my.cnf: |-
+    [client]
+    user=root
+    password=root123
+{{- end }}

@@ -17,3 +17,11 @@ output "instance_id" {
 output "public_ip" {
   value = tencentcloud_instance.public.public_ip
 }
+
+output "vpc_cidr" {
+  value = tencentcloud_vpc.main.cidr_block
+}
+
+output "subnet_cidr" {
+  value = tencentcloud_subnet.public.cidr_block
+}

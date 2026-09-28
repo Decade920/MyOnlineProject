@@ -1,0 +1,122 @@
+# 生成单节点部署prometheus的deployment的声明
+# yaml-language-server: $schema:none
+{{- if .Values.monitoring.allEnabled }}
+{{- if .Values.monitoring.prometheus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  replicas: {{ .Values.monitoring.prometheus.replicaCount}}
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: "{{ .Values.monitoring.prometheus.image.repository }}:{{ .Values.monitoring.prometheus.image.tag}}"
+          imagePullPolicy: "{{ .Values.global.imagePullPolicy}}"
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus"
+          ports:
+            - containerPort: {{ .Values.monitoring.prometheus.service.port }}
+          volumeMounts:
+            - name: prometheus-config
+              mountPath: /etc/prometheus
+      volumes:
+        - name: prometheus-config
+          configMap:
+            name: prometheus-config
+        - name: prometheus-data
+          hostPath:
+            path: /tmp/prometheus-data
+            type: DirectoryOrCreate
+---
+# 生成prometheus的service的声明
+# yaml-language-server: $schema:none
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.monitoring.prometheus.service.port}}
+      targetPort: {{ .Values.monitoring.prometheus.service.port}}
+      nodePort: {{ .Values.monitoring.prometheus.service.nodePort}}
+  selector:
+    app: prometheus
+---
+# 手动编写configmap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets: ['alertmanager:9093']
+
+    rule_files:
+      - "/etc/prometheus/alerts.yml"
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+        - targets: ['localhost:9090']
+      - job_name: 'mysql-exporter'
+        static_configs:
+        - targets: ['mysql-exporter-service:9104']
+      - job_name: 'redis-exporter'
+        static_configs:
+        - targets: ['redis-exporter-service:9121']
+      - job_name: 'nginx-exporter'
+        static_configs:
+        - targets: ['nginx-exporter-service:9113']
+      - job_name: 'rabbitmq-exporter'
+        static_configs:
+        - targets: ['rabbitmq-exporter-service:9419']
+      - job_name: 'flask-app'
+        static_configs:
+        - targets: ['flask-service.default.svc.cluster.local:5000']
+        metrics_path: '/metrics'
+        scheme: 'http'
+
+  alerts.yml: |
+      groups:
+      - name: test
+        rules:
+        - alert: TestAlert
+          expr: vector(1) == 1
+          for: 1m
+          labels:
+            severity: test
+          annotations:
+            summary: "测试告警~"
+      - name: FlaskHighRequestRate
+        rules:
+        - alert: FlaskHighRequestRate
+          expr: rate(flask_http_requests_total[1m]) > 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Flask应用请求量过高"
+            description: "Flask应用请求量在最近2分钟内超过1次，请检查应用状态"
+{{- end }}
+{{- end }}

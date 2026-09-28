@@ -1,0 +1,187 @@
+{{- if .Values.monitoring.allEnabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: promtail-daemonset
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: promtail
+  template:
+    metadata:
+      labels:
+        app: promtail
+    spec:
+      serviceAccountName: promtail
+      securityContext:
+          fsGroup: 0
+          runAsGroup: 0 
+          runAsUser: 0
+      containers:
+      - name: promtail
+        image: "{{ .Values.monitoring.promtail.image.repository}}:{{ .Values.monitoring.promtail.image.tag }}"
+        imagePullPolicy: "{{ .Values.global.imagePullPolicy}}"
+        env:
+          - name: HOSTNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        args:
+          - "-config.file=/etc/promtail/promtail.yaml"
+          - "-log.level=debug"
+        volumeMounts:
+          - name: config
+            mountPath: /etc/promtail
+            readOnly: true
+          - name: varlog
+            mountPath: /var/log
+            readOnly: true
+          # 保留该挂载保证软链接目标完全可达
+          - name: varlibdockercontainers
+            mountPath: /var/lib/docker/containers
+            readOnly: true
+          - name: sa-token
+            mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+            readOnly: true
+
+      volumes:
+        - name: config
+          configMap:
+            name: promtail-config
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: sa-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promtail-config
+  namespace: monitoring
+data:
+  promtail.yaml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+
+    positions:
+      filename: /tmp/positions.yaml
+
+    clients:
+      - url: {{ .Values.monitoring.promtail.config.lokiUrl }}
+
+    scrape_configs:
+      # # --- 任务 1: 通用采集 (可选，带注解过滤) ---
+      # - job_name: kubernetes-pods
+      #   kubernetes_sd_configs:
+      #     - role: pod
+      #   relabel_configs:
+      #     # 只抓取带有注解 promtail.io/scrape: "true" 的 Pod
+      #     - source_labels: [__meta_kubernetes_pod_annotation_promtail_io_scrape]
+      #       action: keep
+      #       regex: true
+          
+      #     - source_labels: [__meta_kubernetes_namespace]
+      #       target_label: namespace
+      #     - source_labels: [__meta_kubernetes_pod_name]
+      #       target_label: pod
+      #     - source_labels: [__meta_kubernetes_pod_container_name]
+      #       target_label: container
+          
+      #     # 【修正】构建标准 CRI 路径
+      #     # 目录格式: <namespace>_<pod-name>_<pod-uid>
+      #     # 文件格式: <container-name>/*.log (通配符匹配轮转日志)
+      #     - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_name, __meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+      #       target_label: __path__
+      #       replacement: '/var/log/pods/*/*/*.log'
+            
+      #   pipeline_stages:
+      #     - cri: {}
+
+      # --- 任务 2: 测试采集 (无过滤，采集所有) ---
+      - job_name: kubernetes-pods-test
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: __host__
+            action: replace
+          
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_uid]
+            target_label: uid
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          
+          # 【修正】构建标准 CRI 路径
+          # 注意：separator 设置为一个不会出现在标签值中的字符（如 ;），
+          # 因为我们在 replacement 中手动使用了 _ 来连接前三个标签。
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_name, __meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            separator: '_'
+            regex: '(.*)_(.*)_(.*)_(.*)'
+            target_label: __path__
+            replacement: '/var/log/pods/${1}_${2}_${3}/${4}/*.log'
+
+        pipeline_stages:
+          - cri: {}
+
+      # - job_name: kubernetes-pods-static
+      #   static_configs:
+      #     - targets: [localhost]
+      #       labels:
+      #         job: kubernetes-pods-static
+      #         __path__: /var/log/pods/*/*/*.log
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: promtail
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: promtail
+rules:
+- apiGroups: [""]
+  resources:
+    - nodes
+    - nodes/proxy
+    - services
+    - namespaces
+    - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+    - ingresses
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: promtail
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: promtail
+subjects:
+- kind: ServiceAccount
+  name: promtail
+  namespace: monitoring
+{{- end }}

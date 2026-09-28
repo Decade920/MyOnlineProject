@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=none
+{{- if .Values.debug.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debug-pod-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: debug-pod
+  template: 
+    metadata:
+      labels:
+        app: debug-pod
+    spec:
+      serviceAccountName: debug-pod-sa
+      containers:
+      - name: debug-pod
+        image: "{{ .Values.debug.image.repository }}:{{ .Values.debug.image.tag }}"
+        imagePullPolicy: '{{ .Values.global.imagePullPolicy | default "IfNotPresent" }}'
+        command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: debug-pod-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: debug-pod-role
+  namespace: default
+rules:
+  - apiGroups: 
+      - ""
+    resources: 
+      - pods
+      - services
+      - configmaps
+    verbs:
+      - get
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: debug-pod-rolebinding
+  namespace: default
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: Role
+  name: debug-pod-role
+subjects:
+  - kind: ServiceAccount
+    name: debug-pod-sa
+    namespace: default
+{{- end }}

@@ -29,3 +29,13 @@ variable "env_name" {
   type    = string
   default = "dev"
 }
+
+variable "cvm_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "cluster_cidr" {
+  type    = string
+  default = "172.16.0.0/16"
+}

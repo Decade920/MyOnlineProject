@@ -1,0 +1,88 @@
+# 生成镜像为kbudde/rabbitmq-exporter:latest的deployment的声明
+# yaml-language-server: $schema:none
+{{- if .Values.monitoring.allEnabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbitmq-exporter-deployment
+  namespace: monitoring
+spec:
+  replicas: {{ .Values.monitoring.rabbitmqExporter.replicaCount }}
+  selector:
+    matchLabels:
+      app: rabbitmq-exporter
+  template:
+    metadata:
+      labels:
+        app: rabbitmq-exporter
+    spec:
+      containers:
+        - name: rabbitmq-exporter
+          image: "{{ .Values.monitoring.rabbitmqExporter.image.repository }}:{{ .Values.monitoring.rabbitmqExporter.image.tag}}"
+          imagePullPolicy: '{{ .Values.global.imagePullPolicy | default "IfNotPresent" }}'
+          # args:
+          #   - "-config-file=/etc/rabbitmq-exporter/rabbitmq-config.json"
+          ports:
+            - containerPort:
+                {{ .Values.monitoring.rabbitmqExporter.service.port }}
+          env:
+            - name: RABBIT_URL
+              value: "http://rabbitmq-service.default.svc.cluster.local:15672"
+            - name: RABBIT_USER
+              value: "admin"
+            - name: RABBIT_PASSWORD
+              value: "admin123"
+            - name: LOG_LEVEL
+              value: "info"
+            - name: OUTPUT_FORMAT
+              value: "prometheus"
+      #     volumeMounts:
+      #       - name: rabbitmq-exporter-config
+      #         mountPath: /etc/rabbitmq-exporter
+      # volumes:
+      #   - name: rabbitmq-exporter-config
+      #     configMap:
+      #       name: rabbitmq-exporter-configmap
+---
+# 生成rabbitmq-exporter的service的声明
+# yaml-language-server: $schema:none
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-exporter-service
+  namespace: monitoring
+  labels:
+    app: rabbitmq-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app: rabbitmq-exporter
+  ports:
+    - port: {{ .Values.monitoring.rabbitmqExporter.service.port }}
+      targetPort: {{ .Values.monitoring.rabbitmqExporter.service.port }}
+# ---
+# # 生成rabbitmq-exporter的configmap的声明
+# # yaml-language-server: $schema:none
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: rabbitmq-exporter-configmap
+#   namespace: monitoring
+#   labels:
+#     app: rabbitmq-exporter
+# data:
+#   rabbitmq-config.json: |
+#     # RabbitMQ Exporter configuration
+#     # Add your configuration here
+#     {
+#       "rabbitmq": {
+#         "url": "http://rabbitmq-service.default.svc.cluster.local:15672",
+#         "username": "admin",
+#         "password": "admin123"
+#       },
+#       "exporter": {
+#         "log_level": "info",
+#         "output_format": "prometheus"
+#       }
+#     }
+{{- end }}
