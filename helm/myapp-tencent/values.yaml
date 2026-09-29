@@ -18,7 +18,7 @@ debug:
 # default 命名空间的服务配置
 default:
   flask:
-    replicaCount: 2
+    replicaCount: 1
     image:
       repository: ccr.ccs.tencentyun.com/myapp-tencent/flask-app
       tag: v2
