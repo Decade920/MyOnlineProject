@@ -69,7 +69,7 @@ default:
 
   ingress:
     enabled: true
-    host: myapp-tencent.139.199.13.221.nip.io
+    host: myapp-tencent.139.199.13.221.sslip.io
 
 # monitoring 命名空间的服务配置
 monitoring:
