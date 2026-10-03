@@ -34,7 +34,7 @@ jobs:
           TAG=$(git rev-parse --short HEAD)
           cd helm/myapp-tencent/others/api/flask-app
           docker build -t ccr.ccs.tencentyun.com/myapp-tencent/flask-app:$TAG .
-          docker push ccr.ccs.tencentyun.com/myapp-tencent/flask-app
+          docker push ccr.ccs.tencentyun.com/myapp-tencent/flask-app:$TAG
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Update values.yaml
