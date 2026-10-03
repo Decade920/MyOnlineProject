@@ -8,20 +8,18 @@
 global:
   namespace: default
   imagePullPolicy: IfNotPresent
-
 debug:
   enabled: false
   image:
     repository: bitnami/kubectl
     tag: latest
-
 # default 命名空间的服务配置
 default:
   flask:
     replicaCount: 1
     image:
       repository: ccr.ccs.tencentyun.com/myapp-tencent/flask-app
-      tag: v2
+      tag: 5d7777e
       pullSecrets:
         - tcr-secret
     service:
@@ -34,7 +32,6 @@ default:
       REDIS_PORT: "6379"
     secret:
       DB_PASSWORD: root123
-
   hello_consumer:
     replicaCount: 0
     image:
@@ -42,7 +39,6 @@ default:
       tag: v1
       pullSecrets:
         - tcr-secret
-
   nginx:
     replicaCount: 1
     image:
@@ -51,13 +47,11 @@ default:
     service:
       port: 80
       nodePort: 30001
-
   redis:
     replicaCount: 1
     image:
       repository: redis
       tag: alpine
-
   mysql:
     replicas: 1
     image:
@@ -66,11 +60,9 @@ default:
     storage: 5Gi
     limitMemory: "600Mi"
     lowMemory: "256Mi"
-
   ingress:
     enabled: false
     host: myapp-tencent.139.199.13.221.sslip.io
-
 # monitoring 命名空间的服务配置
 monitoring:
   allEnabled: false
@@ -83,7 +75,6 @@ monitoring:
     service:
       port: 9090
       nodePort: 32512
-
   grafana:
     replicaCount: 1
     enabled: false
@@ -93,7 +84,6 @@ monitoring:
     service:
       port: 3000
       nodePort: 30306
-
   loki:
     replicas: 1
     image:
@@ -101,14 +91,12 @@ monitoring:
       tag: latest
     service:
       port: 3100
-
   promtail:
     image:
       repository: grafana/promtail
       tag: latest
     config:
       lokiUrl: http://loki-service:3100/loki/api/v1/push
-
   rabbitmqExporter:
     replicaCount: 1
     image:
@@ -116,8 +104,6 @@ monitoring:
       tag: latest
     service:
       port: 9419
-
-
 # ↓是默认生成的配置
 # replicaCount: 1
 
