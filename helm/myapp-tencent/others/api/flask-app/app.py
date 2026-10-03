@@ -29,7 +29,7 @@ except Exception as e:
 
 REQUESTS = Counter('flask_http_requests_total', 'Total HTTP requests',['method', 'endpoint'])
 
-# 初始化mysql表格
+# 初始化mysql表格 
 def init_db():
     try:
         conn = pymysql.connect(
