@@ -18,7 +18,7 @@ jobs:
 
       - name: Login to Tencent Cloud
         run: |
-          echo {{ secrets.TCR_PASSWORD }} | docker login ccr.ccs.tencentyun.com --username {{ secrets.TCR_USER }} --password-stdin
+          echo ${{ secrets.TCR_PASSWORD }} | docker login ccr.ccs.tencentyun.com --username ${{ secrets.TCR_USER }} --password-stdin
 
       - name: Install yq
         run: |
