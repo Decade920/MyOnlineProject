@@ -1,0 +1,44 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm/myapp-tencent/others/api/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login to Tencent Cloud
+        run: |
+          echo {{ secrets.TCR_PASSWORD }} | docker login ccr.ccs.tencentyun.com --username {{ secrets.TCR_USER }} --password-stdin
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Build and Push Docker Image to Tencent Cloud
+        run: |
+          TAG=$(git rev-parse --short HEAD)
+          cd helm/myapp-tencent/others/api/flask-app
+          docker build -t ccr.ccs.tencentyun.com/myapp-tencent/flask-app:$TAG .
+          docker push ccr.ccs.tencentyun.com/myapp-tencent/flask-app
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Update values.yaml
+        run: |
+          cd helm/myapp-tencent
+          yq eval ".default.flask.image.tag = \"$TAG\"" -i values.yaml
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add values.yaml
+          git commit -m "Update tag to $TAG"
+          git push
