@@ -1,17 +1,20 @@
 # 生成ingress配置，映射nginx的80端口
+{{- if .Values.default.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: nginx-ingress
 spec:
+  ingressClassName: traefix
   rules:
-  - host: "kamenrider.decade"
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: nginx-service
-            port:
-              number: 80
+    - host: {{ .Values.default.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+{{- end }}

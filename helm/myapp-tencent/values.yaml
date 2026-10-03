@@ -67,6 +67,10 @@ default:
     limitMemory: "600Mi"
     lowMemory: "256Mi"
 
+  ingress:
+    enabled: true
+    host: myapp-tencent.139.199.13.221.nip.io
+
 # monitoring 命名空间的服务配置
 monitoring:
   allEnabled: false
