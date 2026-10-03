@@ -8,10 +8,14 @@ on:
       - 'helm/myapp-tencent/others/api/**'
   workflow_dispatch:
 
+concurrency:
+  group: helm-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    environment: production
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
