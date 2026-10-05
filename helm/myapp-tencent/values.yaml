@@ -63,6 +63,9 @@ default:
   ingress:
     enabled: false
     host: myapp-tencent.139.199.13.221.sslip.io
+  consumer:
+    image:
+      tag: 0a20798
 # monitoring 命名空间的服务配置
 monitoring:
   allEnabled: false
@@ -106,7 +109,6 @@ monitoring:
       port: 9419
 # ↓是默认生成的配置
 # replicaCount: 1
-
 # # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 # image:
 #   repository: nginx
