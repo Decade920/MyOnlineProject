@@ -1,0 +1,49 @@
+name: Build and Push consumer Image
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'helm/myapp-tencent/others/consumer/**'
+  workflow_dispatch:
+
+concurrency:
+  group: helm-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Login to Tencent Cloud
+        run: |
+          echo "${{ secrets.TCR_PWD }}" | docker login ccr.ccs.tencentyun.com --username "${{ secrets.TCR_USER }}" --password-stdin
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq
+
+      - name: Build and Push Docker Image to Tencent Cloud
+        run: |
+          TAG=$(git rev-parse --short HEAD)
+          cd helm/myapp-tencent/others/consumer
+          docker build -t ccr.ccs.tencentyun.com/myapp-tencent/consumer:$TAG .
+          docker push ccr.ccs.tencentyun.com/myapp-tencent/consumer:$TAG
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Update values.yaml
+        run: |
+          cd helm/myapp-tencent
+          yq eval ".default.consumer.image.tag = \"$TAG\"" -i values.yaml
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add values.yaml
+          git commit -m "Update consumer image tag to $TAG"
+          git push
