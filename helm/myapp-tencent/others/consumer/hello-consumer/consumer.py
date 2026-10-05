@@ -6,7 +6,7 @@ RABBITMQ_HOST = "rabbitmq-service"
 RABBITMQ_USER = "admin"
 RABBITMQ_PASS = "admin123"
 
-# Callback function to handle incoming messages
+# Callback function to handle incoming messages 
 def callback(ch, method, properties, body):
     print(f"[x] Received {body.decode()}")
     print("[x] Done")
