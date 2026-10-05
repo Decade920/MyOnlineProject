@@ -34,9 +34,9 @@ jobs:
       - name: Build and Push Docker Image to Tencent Cloud
         run: |
           TAG=$(git rev-parse --short HEAD)
-          cd helm/myapp-tencent/others/consumer
-          docker build -t ccr.ccs.tencentyun.com/myapp-tencent/consumer:$TAG .
-          docker push ccr.ccs.tencentyun.com/myapp-tencent/consumer:$TAG
+          cd helm/myapp-tencent/others/consumer/hello-consumer
+          docker build -t ccr.ccs.tencentyun.com/myapp-tencent/hello-consumer:$TAG .
+          docker push ccr.ccs.tencentyun.com/myapp-tencent/hello-consumer:$TAG
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Update values.yaml
