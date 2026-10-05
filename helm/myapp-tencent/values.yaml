@@ -63,9 +63,6 @@ default:
   ingress:
     enabled: false
     host: myapp-tencent.139.199.13.221.sslip.io
-  consumer:
-    image:
-      tag: 0a20798
 # monitoring 命名空间的服务配置
 monitoring:
   allEnabled: false
