@@ -18,7 +18,7 @@ db_user = os.getenv("DB_USER", "root")
 db_password = os.getenv("DB_PASSWORD", "root123")
 db_name = os.getenv("DB_NAME", "myapp")
 
-# 连接redis
+# 连接redis 
 try:
     r = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
     r.ping()
