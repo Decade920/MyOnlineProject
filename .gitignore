@@ -16,3 +16,11 @@
 
 # 忽略备份文件
 *.bakup
+
+# 忽略ansible inventory目录、group_vars、host_vars目录
+inventory/*
+group_vars/*
+host_vars/*
+ansible/*.retry
+.ansible/
+ansible/*.log
