@@ -18,9 +18,9 @@
 *.bakup
 
 # 忽略ansible inventory目录、group_vars、host_vars目录
-inventory/hosts
-group_vars/all/vaults.yml
-host_vars/*/vaults.yml
-ansible/*.retry
-.ansible/
-ansible/*.log
+ansible/inventory/hosts
+ansible/group_vars/all/vaults.yml
+ansible/host_vars/*/vaults.yml
+ansible/ansible/*.retry
+ansible/.ansible/
+ansible/ansible/*.log
