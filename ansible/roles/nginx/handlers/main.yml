@@ -1,0 +1,6 @@
+# yaml-language-server: $schema:https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  when: not ansible_check_mode

@@ -1,37 +1,59 @@
 # yaml-language-server: $schema:https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json
-# - name: 翻译ad-hoc (ansible k3s_nodes -m copy -a "src=./nginx.conf dest=/etc/nginx/nginx.conf")
-#   hosts: k3s_nodes
-#   tasks:
-#     - name: Copy nginx.conf to remote hosts
-#       become: yes
-#       copy:
-#         src: nginx.conf
-#         dest: /etc/nginx/nginx.conf
-
 # - name: 在k3s_nodes上执行任务
 #   hosts: k3s_nodes
 #   become: yes
+#   vars:
+#     pkg_name: htop
 #   tasks:
-#     - name: 安装 htop
-      
+#     - name: Debian安装 {{ pkg_name }} 包
 #       apt:
-#         name: htop
+#         name: "{{ pkg_name }}"
 #         state: present
+#       when: ansible_os_family == 'Debian'
 
-- name: 在k3s_master上执行任务
+#     - name: RedHat安装 {{ pkg_name }} 包
+#       yum:
+#         name: "{{ pkg_name }}"
+#         state: present
+#       when: ansible_os_family == 'RedHat'
+
+- name: 在k3s_nodes上执行任务
   hosts: k3s_nodes
   become: yes
-  vars:
-    pkg_name: htop
   tasks:
-    - name: Debian安装 {{ pkg_name }} 包
-      apt:
-        name: "{{ pkg_name }}"
+    - name: 安装 htop, curl, git
+      package:
+        name: "{{ item }}"
         state: present
-      when: ansible_os_family == 'Debian'
+      loop:
+        - htop
+        - curl
+        - git
+      when:
+        - ansible_facts["os_family"] == "Debian"
+  tags:
+    - install_packages
 
-    - name: RedHat安装 {{ pkg_name }} 包
-      yum:
-        name: "{{ pkg_name }}"
-        state: present
-      when: ansible_os_family == 'RedHat'
+- name: 测试幂等性
+  hosts: k3s_nodes
+  become: yes
+  tasks:
+    - name: 创建三个目录
+      file:
+        path: "/tmp/ansible-test-{{ item }}"
+        state: directory
+      loop:
+        - kuuga
+        - agito
+        - ryuki
+        - faiz
+        - blade
+        - hibiki
+        - kabuto
+        - den-o
+        - kiva
+        - decade
+      when:
+        - ansible_facts["os_family"] == "Debian"
+  tags:
+    - create_directories
